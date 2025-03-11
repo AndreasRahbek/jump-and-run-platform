@@ -1,0 +1,10 @@
+[package]
+name = "jump-and-run-platform"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15.3"
+wasm-bindgen = "0.2.100"
+
+
