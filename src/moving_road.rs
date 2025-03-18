@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use crate::movement::Movable;
 
 
 #[derive(Component)]
@@ -49,25 +50,21 @@ pub fn setup_road(
                     occupied: false,
                 },
                 MovingRoad,
+                Movable { speed: 50.0 },
             ));
         }
     }
 }
 
 pub fn move_road(
-    time: Res<Time>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut query: Query<(&mut Transform, &Tile), With<MovingRoad>>,
 ) {
-    let speed = 50.0;
-    let delta = time.delta_secs();
     let tile_size = 32.0;
     let grid_size_y = 10;
     
     for (mut transform, tile) in query.iter_mut() {
-        transform.translation.y -= speed * delta;
-        
         // Hvis vejen går ud af skærmen, flyt den til toppen og opdater dens position
         if transform.translation.y < -320.0 {
             transform.translation.y += 320.0 + (grid_size_y as f32 * tile_size);
@@ -91,6 +88,7 @@ pub fn move_road(
                     occupied: false,
                 },
                 MovingRoad,
+                Movable { speed: 50.0 },
             ));
         }
     }

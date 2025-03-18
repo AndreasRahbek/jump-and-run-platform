@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use crate::movement::Movable;
 
 
 #[derive(Component)]
@@ -50,6 +51,7 @@ pub fn setup_grid(
                     y: y as u32,
                     occupied: false,
                 },
+                Movable { speed: 50.0 },
             ));
         }
     }
