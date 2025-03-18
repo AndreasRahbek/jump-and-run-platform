@@ -22,7 +22,7 @@ pub fn setup_grid(
                 Sprite {
                     image: asset_server.load("tileset/background.png"),
                     texture_atlas: None,
-                    color: Color::srgba(1.0, 1.0, 1.0, 0.2),
+                    color: Color::srgba(1.0, 1.0, 1.0, 1.0),
                     flip_x: false,
                     flip_y: false,
                     custom_size: Some(Vec2::new(tile_size, tile_size)),
