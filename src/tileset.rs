@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+
 pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Sprite {
         image: asset_server.load(""),
@@ -10,3 +11,5 @@ pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     });
 }
+
+
