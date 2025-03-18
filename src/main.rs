@@ -3,7 +3,7 @@ mod tileset;
 
 use bevy::prelude::*;
 use character_run::{animate_sprite, setup};
-use tileset::Startup;{setupMap};
+use tileset::{setupMap};
 
 fn main() {
     App::new()

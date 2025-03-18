@@ -43,7 +43,7 @@ pub fn setup(
         Sprite::from_atlas_image(
             texture,
             TextureAtlas {
-                layout: texture_atlas_layout,
+                layout: texture_atlas_layout, 
                 index: animation_indices.first,
             },
         ),
