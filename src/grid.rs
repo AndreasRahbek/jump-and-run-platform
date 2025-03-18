@@ -3,7 +3,7 @@ use bevy::sprite::Anchor;
 
 
 #[derive(Component)]
-pub struct Tile {
+pub struct TileGrid {
     pub x: u32,
     pub y: u32,
     pub occupied: bool,
@@ -27,7 +27,7 @@ pub fn setup_grid(
                     flip_y: false,
                     custom_size: Some(Vec2::new(tile_size, tile_size)),
                     rect: None,
-                    anchor: Anchor::Center,
+                    anchor: Anchor::TopCenter,
                     image_mode: SpriteImageMode::Auto,
                 ..default()
                 },
@@ -39,7 +39,7 @@ pub fn setup_grid(
                     y as f32 * tile_size - (grid_size as f32 * tile_size) / 2.0,
                     0.0,
                 ),
-                Tile {
+                TileGrid {
                     x: x as u32,
                     y: y as u32,
                     occupied: false,
