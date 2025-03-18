@@ -20,7 +20,7 @@ pub fn setup_grid(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    let grid_size = 10; // 10x10 grid
+    let grid_size = 15; // 10x10 grid
     let tile_size = 32.0; // Størrelse af hver tile i pixels
 
     for x in 0..grid_size {
@@ -65,12 +65,25 @@ pub fn spawn_log(mut commands: Commands, asset_server: Res<AssetServer>, time: R
                 image: asset_server.load("tileset/log.png"),
                 ..default()
             },
-            Transform::from_xyz(0.0, 100.0, 2.0), // Position i verden
+            Transform::from_xyz(0.0, 75.0, 2.0), // Position i verden
         ));
     }
 }
-pub fn move_log(mut query: Query<(&mut Transform, &Log)>, time: Res<Time>,) {
-    for (mut transform, _log) in query.iter_mut(){
-        transform.translation.y -= 50.0 * time.delta_secs();
+
+pub fn move_map(
+    mut param_set: ParamSet<(
+    Query<(&mut Transform, &Log)>,  // Query for Log
+    Query<(&mut Transform, &TileGrid)>,  // Query for TileGrid
+    )>,
+    time: Res<Time>)  {
+
+    // Bevæg Log ned
+    for (mut transform, _log) in param_set.p0().iter_mut() {
+        transform.translation.y -= 50.0 * time.delta_secs();  // Flyt log ned
+    }
+
+    // Bevæg TileGrid ned
+    for (mut transform, _tile) in param_set.p1().iter_mut() {
+        transform.translation.y -= 50.0 * time.delta_secs();  // Flyt tile ned
     }
 }

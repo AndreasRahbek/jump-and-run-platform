@@ -36,8 +36,7 @@ pub fn setup_road(
                     image_mode: SpriteImageMode::Auto,
                 ..default()
                 },
-               
-                
+
 
                 Transform::from_xyz(
                     x as f32 * tile_size - (grid_size_x as f32 * tile_size) / 100.0,
