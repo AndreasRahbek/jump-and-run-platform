@@ -6,7 +6,6 @@ pub fn setup_map(mut commands: Commands, asset_server: Res<AssetServer>) {
             tile_x: true,
             tile_y: true,
             stretch_value: 1.0,
-            
         },
         ..default()
     });
