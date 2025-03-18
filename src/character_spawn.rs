@@ -28,7 +28,7 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut
     }
 }
 
-pub fn setup(
+pub fn setup_character(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
@@ -47,7 +47,7 @@ pub fn setup(
                 index: animation_indices.first,
             },
         ),
-        Transform::from_scale(Vec3::splat(6.0)),
+        Transform::from_scale(Vec3::splat(2.0)),
         animation_indices,
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
     ));
