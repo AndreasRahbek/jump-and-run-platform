@@ -15,6 +15,9 @@ pub struct AnimationTimer(pub Timer);
 pub struct Player;
 
 const PLAYER_SPEED: f32 = 10.;
+const PLAYER_SIZE: u32 = 32;
+
+const ANIMATION_SPEED: f32 = 0.1;
 
 
 pub fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut Sprite)>,
@@ -42,7 +45,7 @@ pub fn setup_character(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture = asset_server.load("textures/character/human.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 1, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(PLAYER_SIZE), 1, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let animation_indices = AnimationIndices {first: 0, last: 5};
@@ -61,7 +64,7 @@ pub fn setup_character(
             ..Default::default() // Beholder rotation som identity
         },
         animation_indices,
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        AnimationTimer(Timer::from_seconds(ANIMATION_SPEED, TimerMode::Repeating)),
     ));
 }
 

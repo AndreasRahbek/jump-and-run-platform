@@ -4,12 +4,14 @@ mod grid;
 mod moving_road;
 mod log;
 mod movement;
+mod collision;
 
 use bevy::prelude::*;
 use character_spawn::*;
 use camera::*;
 use grid::*;
 use moving_road::*;
+use collision::*;
 
 fn main() {
     App::new()
@@ -21,7 +23,8 @@ fn main() {
             move_character,
             log::spawn_log,
             movement::move_entities,
-            moving_road::move_road
+            moving_road::move_road,
+            check_collision,
         ))
         .run();
 
