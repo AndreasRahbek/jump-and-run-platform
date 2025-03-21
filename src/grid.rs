@@ -15,8 +15,8 @@ const RES_WIDTH: u32 = 480;  // 15 * 32
 const RES_HEIGHT: u32 = 480; // 15 * 32
 
 // Render layers
-const GAME_LAYERS: RenderLayers = RenderLayers::layer(0);
-const UI_LAYERS: RenderLayers = RenderLayers::layer(1);
+pub const GAME_LAYERS: RenderLayers = RenderLayers::layer(0);
+pub const UI_LAYERS: RenderLayers = RenderLayers::layer(1);
 
 #[derive(Component)]
 pub struct TileGrid {
