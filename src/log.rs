@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::collision::Collider;
+//use crate::collision::Collider;
 use super::movement::Movable;
 
 #[derive(Component)]
@@ -20,7 +20,7 @@ pub fn spawn_log(
             },
             Transform::from_xyz(0.0, 100.0, 2.0),
             Movable { speed: 50.0 },
-            Collider,
+            //Collider,
 
         ));
     }
