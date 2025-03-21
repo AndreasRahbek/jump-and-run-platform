@@ -261,8 +261,8 @@ pub fn fit_canvas(
         if let Ok(mut projection) = query.get_single_mut() {
             let h_scale = event.width / RES_WIDTH as f32;
             let v_scale = event.height / RES_HEIGHT as f32;
-            // Tilføj en zoom-faktor på 1.2 (20% mere zoom)
-            let zoom_factor = 1.2;
+
+            let zoom_factor = 2.5;
             projection.scale = 1. / (h_scale.min(v_scale).floor().max(1.0) * zoom_factor);
         }
     }
