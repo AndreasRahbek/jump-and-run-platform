@@ -1,6 +1,7 @@
 use bevy::asset::{AssetServer, Assets};
 use bevy::math::{UVec2, Vec3};
 use bevy::prelude::*;
+use crate::collision::Collider;
 
 #[derive(Component)]
 pub struct AnimationIndices {
@@ -11,12 +12,17 @@ pub struct AnimationIndices {
 #[derive(Component, Deref, DerefMut)]
 pub struct AnimationTimer(pub Timer);
 
-#[derive(Component)]
-pub struct Player;
+#[derive(Resource)]
+pub struct JumpTimer(pub Timer);
+
+
+#[derive(Component, Default)]
+pub struct Player {
+    pub is_jumping: bool,
+}
 
 const PLAYER_SPEED: f32 = 10.;
-const PLAYER_SIZE: u32 = 32;
-
+const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(5., 1.);
 const ANIMATION_SPEED: f32 = 0.1;
 
 
@@ -37,20 +43,18 @@ pub fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut
     }
 }
 
-
-
 pub fn setup_character(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture = asset_server.load("textures/character/human.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(PLAYER_SIZE), 1, 1, None, None);
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 1, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let animation_indices = AnimationIndices {first: 0, last: 5};
     commands.spawn((
-        Player,
+        Player::default(),
         Sprite::from_atlas_image(
             texture,
             TextureAtlas {
@@ -60,11 +64,13 @@ pub fn setup_character(
         ),
         Transform {
             translation: Vec3::new(0., 0., 2.),
-            scale: Vec3::splat(1.0),
             ..Default::default() // Beholder rotation som identity
         },
         animation_indices,
         AnimationTimer(Timer::from_seconds(ANIMATION_SPEED, TimerMode::Repeating)),
+        Collider{
+            size: PLAYER_HITBOX_SIZE,
+        }
     ));
 }
 
@@ -97,3 +103,29 @@ pub fn move_character(
     let move_delta = direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs();
     player.translation += move_delta.extend(0.);
 }
+
+pub fn jump(
+    time: Res<Time>,
+    mut jump_timer: ResMut<JumpTimer>,
+    mut player: Query<(&mut Collider, &mut Player), With<Player>>,
+    kb_input: Res<ButtonInput<KeyCode>>,
+) {
+    for (mut collider, mut player) in &mut player.iter_mut() {
+        if kb_input.pressed(KeyCode::Space) && !player.is_jumping {
+            player.is_jumping = true;
+            println!("Jumping");
+            jump_timer.0.reset();
+        }
+
+        jump_timer.0.tick(time.delta());
+
+        if jump_timer.0.just_finished() {
+            println!("Done Jumping");
+            player.is_jumping = false;
+        }
+    }
+
+}
+
+
+

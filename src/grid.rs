@@ -13,8 +13,6 @@ pub struct TileGrid {
 #[derive(Component)]
 pub struct Log;
 
-#[derive(Resource)]
-pub struct SpawnTimer(pub Timer);
 
 pub fn setup_grid(
     mut commands: Commands,
@@ -56,20 +54,6 @@ pub fn setup_grid(
         }
     }
 }
-
-pub fn spawn_log(mut commands: Commands, asset_server: Res<AssetServer>, time: Res<Time>, mut timer: ResMut<SpawnTimer>) {
-    if timer.0.tick(time.delta()).just_finished() {
-        commands.spawn((
-            Log, // Log-komponenten
-            Sprite {
-                image: asset_server.load("tileset/log.png"),
-                ..default()
-            },
-            Transform::from_xyz(0.0, 75.0, 2.0), // Position i verden
-        ));
-    }
-}
-
 pub fn move_map(
     mut param_set: ParamSet<(
     Query<(&mut Transform, &Log)>,  // Query for Log

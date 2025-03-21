@@ -4,12 +4,16 @@ use super::movement::Movable;
 
 #[derive(Component)]
 pub struct Log;
+#[derive(Resource)]
+pub struct SpawnTimer(pub Timer);
+
+const LOG_SIZE: Vec2 = Vec2::new(13.0, 1.);
 
 pub fn spawn_log(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
-    mut timer: ResMut<crate::SpawnTimer>
+    mut timer: ResMut<SpawnTimer>
 ) {
     if timer.0.tick(time.delta()).just_finished() {
         commands.spawn((
@@ -20,8 +24,9 @@ pub fn spawn_log(
             },
             Transform::from_xyz(0.0, 100.0, 2.0),
             Movable { speed: 50.0 },
-            Collider,
-
+            Collider{
+                size: LOG_SIZE,
+            },
         ));
     }
 }
