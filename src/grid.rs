@@ -29,9 +29,6 @@ pub struct TileGrid {
 pub struct Log;
 
 #[derive(Resource)]
-pub struct SpawnTimer(pub Timer);
-
-#[derive(Resource)]
 pub struct GridMovementTracker {
     pub distance_moved: f32,
     pub threshold: f32,
@@ -148,25 +145,6 @@ pub fn setup_grid(
                 GAME_LAYERS,
             ));
         }
-    }
-}
-
-pub fn spawn_log(
-    mut commands: Commands, 
-    asset_server: Res<AssetServer>, 
-    time: Res<Time>, 
-    mut timer: ResMut<SpawnTimer>
-) {
-    if timer.0.tick(time.delta()).just_finished() {
-        commands.spawn((
-            Log,
-            Sprite {
-                image: asset_server.load("tileset/log.png"),
-                ..default()
-            },
-            Transform::from_xyz(0.0, 75.0, 2.0),
-            GAME_LAYERS, // Tilføj render layer
-        ));
     }
 }
 
