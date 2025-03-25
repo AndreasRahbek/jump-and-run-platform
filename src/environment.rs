@@ -1,7 +1,6 @@
-/*use bevy::prelude::*;
+use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use crate::movement::Movable;
-use crate::render::GAME_LAYERS;
 
 #[derive(Component)]
 pub struct EnvironmentObject {
@@ -60,7 +59,7 @@ pub fn setup_environment(
                 Sprite {
                     image: asset_server.load("tileset/cactus.png"), // Erstat med dine egne miljø-assets
                     custom_size: Some(Vec2::new(tile_size * 1.2, tile_size * 1.2)),
-                    anchor: Anchor::Bot,
+                    anchor: Anchor::BottomCenter,
                     ..default()
                 },
                 Transform::from_xyz(
@@ -136,7 +135,7 @@ pub fn move_environment(
                 Sprite {
                     image: asset_server.load("tileset/tree.png"),
                     custom_size: Some(Vec2::new(tile_size * 1.5, tile_size * 1.5)),
-                    anchor: Anchor::Bottom,
+                    anchor: Anchor::BottomCenter,
                     ..default()
                 },
                 Transform::from_xyz(
@@ -176,4 +175,4 @@ pub fn move_environment(
             ));
         }
     }
-}*/
+}
