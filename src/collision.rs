@@ -2,8 +2,9 @@ use bevy::prelude::*;
 use crate::character::Player;
 
 #[derive(Component)]
-pub struct Collider{
+pub struct Collider {
     pub size: Vec2,
+    //pub is_trigger: bool, // Add this field
 }
 
 pub fn check_collision(

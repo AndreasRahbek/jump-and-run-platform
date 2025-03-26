@@ -8,7 +8,7 @@ use bevy::render::{
     view::RenderLayers,
 };
 use bevy::window::WindowResized;
-use crate::movement::Movable;
+use crate::world_grid::{GridObject, GridConfig, GRID_Z};
 
 // Spil opløsning - justér efter behov
 const RES_WIDTH: u32 = 480;  // 15 * 32
@@ -90,7 +90,11 @@ pub fn setup_pixel_grid(
 
     // Kanvas sprite
     commands.spawn((
-        Sprite::from_image(image_handle),
+        Sprite {
+            image: image_handle,
+            ..default()
+        },
+        Transform::default(),
         GameCanvas,
         UI_LAYERS,
     ));
@@ -113,14 +117,20 @@ pub fn setup_pixel_grid(
 pub fn setup_grid(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    grid_config: Res<GridConfig>,
 ) {
-    let grid_size_x = 15; // Beholder samme bredde
-    let grid_size_y = 15; // Beholder samme højde
-    let tile_size = 32.0;
+    let grid_size_x = grid_config.grid_width;
+    let grid_size_y = grid_config.grid_height;
+    let tile_size = grid_config.tile_size;
     
     // Beregn offset for at centrere grid'et
     let total_width = grid_size_x as f32 * tile_size;
+    let total_height = grid_size_y as f32 * tile_size;
     let offset_x = -total_width / 2.0 + tile_size / 2.0;
+    
+    // Calculate the starting position (top-left corner of the grid)
+    // This matches the calculation in draw_grid_lines
+    let start_y = total_height / 2.0;
     
     for x in 0..grid_size_x {
         for y in 0..grid_size_y {
@@ -133,126 +143,22 @@ pub fn setup_grid(
                 },
                 Transform::from_xyz(
                     offset_x + (x as f32 * tile_size),
-                    (y as f32 * tile_size),
-                    0.0,
+                    start_y - (y as f32 * tile_size), // Position from the top
+                    GRID_Z,
                 ),
                 TileGrid {
                     x: x as u32,
                     y: y as u32,
                     occupied: false,
                 },
-                Movable { speed: 50.0 },
+                GridObject, // Add this component
                 GAME_LAYERS,
             ));
         }
     }
 }
 
-pub fn move_map(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut param_set: ParamSet<(
-        Query<(Entity, &mut Transform), With<Log>>,
-        Query<(Entity, &mut Transform, &TileGrid)>,
-    )>,
-    time: Res<Time>,
-    mut movement_tracker: ResMut<GridMovementTracker>
-) {
-    let movement_this_frame = 50.0 * time.delta_secs();
-    
-    // Afrund bevægelse til hele pixels
-    let movement_this_frame = movement_this_frame.floor();
-    
-    // Bevæg Log ned og fjern dem hvis de er ude af skærmen
-    for (entity, mut transform) in param_set.p0().iter_mut() {
-        transform.translation.y -= movement_this_frame;
-        
-        // Snap til grid
-        transform.translation.x = transform.translation.x.floor();
-        transform.translation.y = transform.translation.y.floor();
-        
-        // Fjern logs der er kommet ud af skærmen
-        if transform.translation.y < -320.0 {
-            commands.entity(entity).despawn();
-        }
-    }
-
-    let grid_size = 15;
-    let tile_size = 32.0;
-    
-    // Opdater movement tracker
-    movement_tracker.distance_moved += movement_this_frame;
-    
-    // Flag til at tjekke om et helt grid er nået bunden
-    let mut grid_at_bottom = false;
-    let mut highest_y = -1000.0; // Meget lav startværdi
-    
-    // Bevæg TileGrid ned
-    for (entity, mut transform, tile) in param_set.p1().iter_mut() {
-        transform.translation.y -= movement_this_frame;
-        
-        // Snap til grid
-        transform.translation.x = transform.translation.x.floor();
-        transform.translation.y = transform.translation.y.floor();
-        
-        // Find den højeste y-værdi blandt de resterende tiles
-        if transform.translation.y > highest_y {
-            highest_y = transform.translation.y;
-        }
-        
-        // Hvis den nederste række af grid er nået bunden
-        if transform.translation.y < -320.0 && tile.y == 0 {
-            grid_at_bottom = true;
-        }
-        
-        // Hvis tile går ud af skærmen, fjern den
-        if transform.translation.y < -320.0 {
-            commands.entity(entity).despawn();
-        }
-    }
-    
-    // Hvis grid'et har nået bunden eller der er plads til et nyt grid i toppen
-    if grid_at_bottom || highest_y < 240.0 {
-        // Vi skal sikre at det nye grid placeres præcist
-        let exactly_tile_size = tile_size; // tile_size er allerede et helt tal (32.0)
-        let offset_y = highest_y.floor() + exactly_tile_size;
-        
-        let grid_size_x = 15;
-        let grid_size_y = 15;
-        let total_width = grid_size_x as f32 * tile_size;
-        let offset_x = -total_width / 2.0 + tile_size / 2.0;
-
-        for x in 0..grid_size_x {
-            for y in 0..grid_size_y {
-                commands.spawn((
-                    Sprite {
-                        image: asset_server.load("tileset/background.png"),
-                        custom_size: Some(Vec2::new(tile_size, tile_size)),
-                        anchor: Anchor::TopCenter,
-                        ..default()
-                    },
-                    Transform::from_xyz(
-                        offset_x + (x as f32 * tile_size),
-                        offset_y,
-                        0.0,
-                    ),
-                    TileGrid {
-                        x: x as u32,
-                        y: y as u32,
-                        occupied: false,
-                    },
-                    Movable { speed: 50.0 },
-                    GAME_LAYERS,
-                ));
-            }
-        }
-        
-        // Nulstil tracker
-        movement_tracker.distance_moved = 0.0;
-    }
-}
-
-// Tilpasser kanvas størrelsesforhold ved vindue-ændringer
+// Make sure this function is public
 pub fn fit_canvas(
     mut resize_events: EventReader<WindowResized>,
     mut query: Query<&mut OrthographicProjection, With<OuterCamera>>,

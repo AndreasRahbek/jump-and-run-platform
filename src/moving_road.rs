@@ -1,14 +1,7 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
 use crate::movement::Movable;
-
-
-#[derive(Component)]
-pub struct Tile {
-    pub x: u32,
-    pub y: u32,
-    pub occupied: bool,
-}
+use crate::world_grid::{GridObject, GridConfig, ROAD_Z};
 
 #[derive(Component)]
 pub struct MovingRoad;
@@ -16,89 +9,36 @@ pub struct MovingRoad;
 pub fn setup_road(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    grid_config: Res<GridConfig>,
 ) {
-    let grid_size_x = 1;
-    let grid_size_y = 10;
-    let tile_size = 32.0; 
+    let tile_size = grid_config.tile_size;
+    let road_height = 10; // Number of road tiles to stack vertically
     
-    // Centrér vejen (svarer til offset_x logikken i grid.rs)
-    let road_position_x = 0.0;
-
-    for y in 0..grid_size_y {
+    // Calculate the total height of the grid
+    let total_height = grid_config.grid_height as f32 * tile_size;
+    // Calculate the starting position (top of the grid)
+    let start_y = total_height / 2.0;
+    
+    // Load the road tile image once
+    let road_image = asset_server.load("tileset/stright_road.png");
+    
+    // Spawn road tiles stacked vertically
+    for i in 0..road_height {
         commands.spawn((
             Sprite {
-                image: asset_server.load("tileset/stright_road.png"),
-                custom_size: Some(Vec2::new(tile_size, tile_size)),
-                anchor: Anchor::Center,
+                image: road_image.clone(),
+                custom_size: Some(Vec2::new(tile_size, tile_size)), // Each tile is square
+                anchor: Anchor::Center, // Center anchor for better alignment
                 ..default()
             },
             Transform::from_xyz(
-                road_position_x,
-                y as f32 * tile_size - (grid_size_y as f32 * tile_size) / 3.5,
-                1.0,
+                0.0,                // Centered horizontally
+                start_y - (i as f32 * tile_size) - (tile_size / 2.0), // Position from the top, centered in tile
+                ROAD_Z,
             ),
-            Tile {
-                x: 0,
-                y: y as u32,
-                occupied: false,
-            },
             MovingRoad,
             Movable { speed: 50.0 },
+            GridObject, // This component ensures it moves with the grid system
         ));
-    }
-}
-
-pub fn move_road(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut query: Query<(Entity, &mut Transform, &Tile), With<MovingRoad>>,
-) {
-    let tile_size = 32.0;
-    let road_position_x = 0.0; // Centreret vejposition
-    
-    // Flag til at tjekke om den nederste flise er nået bunden
-    let mut road_at_bottom = false;
-    let mut highest_y = -1000.0; // Meget lav startværdi
-    
-    for (entity, mut transform, tile) in query.iter_mut() {
-        // Find den højeste y-værdi blandt de resterende vejfliser
-        if transform.translation.y > highest_y {
-            highest_y = transform.translation.y;
-        }
-        
-        // Hvis den nederste vejflise er nået bunden
-        if transform.translation.y < -320.0 {
-            road_at_bottom = true;
-            commands.entity(entity).despawn();
-        }
-    }
-    
-    // Hvis vejen har nået bunden eller der er plads til flere fliser i toppen
-    if road_at_bottom || highest_y < 240.0 {
-        let offset_y = highest_y + tile_size;
-        
-        // Spawn 10 vejfliser i toppen, hver 1 flise bred
-        for y in 0..10 {
-            commands.spawn((
-                Sprite {
-                    image: asset_server.load("tileset/stright_road.png"),
-                    custom_size: Some(Vec2::new(tile_size, tile_size)),
-                    anchor: Anchor::Center,
-                    ..default()
-                },
-                Transform::from_xyz(
-                    road_position_x,
-                    offset_y + y as f32 * tile_size,
-                    1.0,
-                ),
-                Tile {
-                    x: 0,
-                    y: y as u32,
-                    occupied: false,
-                },
-                MovingRoad,
-                Movable { speed: 50.0 },
-            ));
-        }
     }
 }

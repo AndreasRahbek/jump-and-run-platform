@@ -2,6 +2,7 @@ use bevy::asset::{AssetServer, Assets};
 use bevy::math::{UVec2, Vec3};
 use bevy::prelude::*;
 use crate::collision::Collider;
+use crate::world_grid::{PLAYER_Z};
 
 #[derive(Component)]
 pub struct AnimationIndices {
@@ -53,6 +54,7 @@ pub fn setup_character(
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     let animation_indices = AnimationIndices {first: 0, last: 5};
+    // Update the Collider initialization to include is_trigger
     commands.spawn((
         Player::default(),
         Sprite::from_atlas_image(
@@ -63,32 +65,27 @@ pub fn setup_character(
             },
         ),
         Transform {
-            translation: Vec3::new(0., 0., 2.),
+            translation: Vec3::new(0., 0., PLAYER_Z),
             ..Default::default() // Beholder rotation som identity
         },
         animation_indices,
         AnimationTimer(Timer::from_seconds(ANIMATION_SPEED, TimerMode::Repeating)),
         Collider{
             size: PLAYER_HITBOX_SIZE,
+            //is_trigger: false, // Add this field
         }
     ));
 }
 
-pub fn move_character(
+// Add this function to replace move_character
+pub fn move_character_horizontal(
     mut player: Single<&mut Transform, With<Player>>,
     time: Res<Time>,
     kb_input: Res<ButtonInput<KeyCode>>,
 ) {
     let mut direction = Vec2::ZERO;
 
-    if kb_input.pressed(KeyCode::KeyW) {
-        direction.y += 1.;
-    }
-
-    if kb_input.pressed(KeyCode::KeyS) {
-        direction.y -= 1.;
-    }
-
+    // Only process horizontal movement
     if kb_input.pressed(KeyCode::KeyA) {
         direction.x -= 1.;
     }
@@ -97,11 +94,18 @@ pub fn move_character(
         direction.x += 1.;
     }
 
-    // Progressively update the player's position over time. Normalize the
-    // direction vector to prevent it from exceeding a magnitude of 1 when
-    // moving diagonally.
+    // Progressively update the player's position over time
     let move_delta = direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs();
-    player.translation += move_delta.extend(0.);
+    
+    // Only apply horizontal movement
+    player.translation.x += move_delta.x;
+    
+    // Snap to pixel grid for crisp rendering
+    player.translation.x = player.translation.x.floor();
+    
+    // Limit player movement to screen bounds
+    let screen_bound = 220.0;
+    player.translation.x = player.translation.x.clamp(-screen_bound, screen_bound);
 }
 
 pub fn jump(

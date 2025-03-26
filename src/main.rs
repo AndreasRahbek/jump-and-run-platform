@@ -6,17 +6,15 @@ mod log;
 mod movement;
 mod collision;
 mod environment;
-
+mod world_grid;
 use bevy::prelude::*;
 use character::*;
-use camera::*;
-use grid::*;
+use grid::*; 
 use moving_road::*;
 use collision::*;
-use movement::*;
 use log::*;
 use environment::*;
-
+use world_grid::*;
 
 fn main() {
     App::new()
@@ -24,31 +22,28 @@ fn main() {
         .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
         .insert_resource(JumpTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
         .add_systems(Startup, (
+            setup_world_grid,
             setup_pixel_grid,
-            setup_character,
             setup_grid, 
             setup_road,
-            setup_environment
-        ))
-
+            setup_environment,
+            setup_character,
+        ).chain())
         .add_systems(Update, (
+            world_grid::toggle_grid_debug,
             animate_sprite,
-            move_character,
+            move_character_horizontal,
             jump,
-            move_entities,
-            move_road,
+            move_grid_objects,
             check_collision,
             spawn_log,
-            move_entities,
-            move_map,
-            move_road,
-            fit_canvas,
-            move_environment
-            
+            check_offscreen_objects,
+            grid::fit_canvas,
+            update_debug_grid.after(move_grid_objects)
         ))
         .run();
-
 }
+
 
 
 
