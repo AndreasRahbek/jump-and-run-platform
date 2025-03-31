@@ -22,7 +22,6 @@ pub struct Player {
     pub is_jumping: bool,
 }
 
-const PLAYER_SPEED: f32 = 10.;
 const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(5., 1.);
 const ANIMATION_SPEED: f32 = 0.1;
 
@@ -77,7 +76,8 @@ pub fn setup_character(
     ));
 }
 
-// Add this function to replace move_character
+const PLAYER_SPEED: f32 = 50.0;
+
 pub fn move_character_horizontal(
     mut player: Single<&mut Transform, With<Player>>,
     time: Res<Time>,
@@ -85,7 +85,7 @@ pub fn move_character_horizontal(
 ) {
     let mut direction = Vec2::ZERO;
 
-    // Only process horizontal movement
+    // Check if inputs are detected
     if kb_input.pressed(KeyCode::KeyA) {
         direction.x -= 1.;
     }
@@ -96,13 +96,10 @@ pub fn move_character_horizontal(
 
     // Progressively update the player's position over time
     let move_delta = direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs();
-    
-    // Only apply horizontal movement
+
+    // Apply movement
     player.translation.x += move_delta.x;
-    
-    // Snap to pixel grid for crisp rendering
-    player.translation.x = player.translation.x.floor();
-    
+
     // Limit player movement to screen bounds
     let screen_bound = 220.0;
     player.translation.x = player.translation.x.clamp(-screen_bound, screen_bound);

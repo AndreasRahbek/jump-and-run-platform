@@ -63,7 +63,7 @@ pub fn update_road(
     }
 
     // Definer grænser
-    let spawn_threshold = -(grid_config.grid_height as f32) * tile_size / 2.0 + tile_size; // Udenfor skærmen
+    let spawn_threshold = -(grid_config.grid_height as f32) * tile_size / 2.0 + (tile_size * 3.); // Udenfor skærmen
     let max_height = (grid_config.grid_height as f32) * tile_size / 2.0; // Øverste grænse
 
     if lowest_y < spawn_threshold {

@@ -85,10 +85,6 @@ pub fn move_grid_objects(
     let movement = grid_config.scroll_speed * delta_time;
     grid_config.distance_moved += movement;
 
-    println!("Delta Time: {}", delta_time);
-    println!("Scroll Speed: {}", grid_config.scroll_speed);
-    println!("Movement: {}", movement);
-
     for mut transform in query.iter_mut() {
         transform.translation.y -= movement;
 
