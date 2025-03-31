@@ -60,7 +60,7 @@ pub fn setup_world_grid(mut commands: Commands) {
         tile_size: TILE_SIZE,
         grid_width: GRID_SIZE_X,
         grid_height: GRID_SIZE_Y,
-        scroll_speed: 50.0,
+        scroll_speed: 20.0,
         distance_moved: 0.0,
         spawn_threshold: TILE_SIZE * 10.0,
     });
@@ -79,17 +79,25 @@ pub fn move_grid_objects(
     mut grid_config: ResMut<GridConfig>,
     mut query: Query<&mut Transform, With<GridObject>>,
 ) {
-    let movement = grid_config.scroll_speed * time.delta_secs();
+    // Begræns delta_time for at undgå store spikes
+    let delta_time = time.delta_secs().min(1.0 / 60.0);
+
+    let movement = grid_config.scroll_speed * delta_time;
     grid_config.distance_moved += movement;
-    
+
+    println!("Delta Time: {}", delta_time);
+    println!("Scroll Speed: {}", grid_config.scroll_speed);
+    println!("Movement: {}", movement);
+
     for mut transform in query.iter_mut() {
         transform.translation.y -= movement;
-        
+
         // Snap to pixel grid for crisp rendering
         transform.translation.x = transform.translation.x.floor();
         transform.translation.y = transform.translation.y.floor();
     }
 }
+
 
 
 // Add this system to clean up offscreen objects and spawn new ones
@@ -100,7 +108,7 @@ pub fn check_offscreen_objects(
     mut grid_config: ResMut<GridConfig>,
 ) {
     let mut should_spawn_new = false;
-    
+
     // Check if objects have moved off screen
     for (entity, transform, _) in query.iter() {
         if transform.translation.y < SCREEN_BOTTOM {
@@ -108,16 +116,16 @@ pub fn check_offscreen_objects(
             should_spawn_new = true;
         }
     }
-    
+
     // Update distance counter
     if should_spawn_new {
         grid_config.distance_moved += TILE_SIZE;
-        
+
         // Check if we've moved enough to spawn new objects
         if grid_config.distance_moved >= grid_config.spawn_threshold {
             // Reset counter
             grid_config.distance_moved = 0.0;
-            
+
             // This is where you would add logic to spawn new objects
             // For now, we'll just log that we should spawn something
             println!("Should spawn new objects at the top of the screen");

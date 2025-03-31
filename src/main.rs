@@ -1,15 +1,13 @@
 mod character;
-mod camera;
-mod grid;
+mod background;
 mod moving_road;
 mod log;
-mod movement;
 mod collision;
 mod environment;
 mod world_grid;
 use bevy::prelude::*;
 use character::*;
-use grid::*; 
+use background::*;
 use moving_road::*;
 use collision::*;
 use log::*;
@@ -30,7 +28,10 @@ fn main() {
             setup_character,
         ).chain())
         .add_systems(Update, (
-            world_grid::toggle_grid_debug,
+            update_road,
+            remove_old_road,
+            update_background,
+            remove_old_background,
             animate_sprite,
             move_character_horizontal,
             jump,
@@ -38,8 +39,8 @@ fn main() {
             check_collision,
             spawn_log,
             check_offscreen_objects,
-            grid::fit_canvas,
-            update_debug_grid.after(move_grid_objects)
+            background::fit_canvas,
+            //update_debug_grid.after(move_grid_objects)
         ))
         .run();
 }

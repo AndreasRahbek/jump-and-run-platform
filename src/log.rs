@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use crate::collision::Collider;
-use crate::grid::*;
-use super::movement::Movable;
+use crate::background::*;
 use crate::world_grid::{GridObject, LOG_Z};
 
 #[derive(Component)]
@@ -31,7 +30,6 @@ pub fn spawn_log(
             },
             Transform::from_xyz(x_position, 250.0, LOG_Z),
             Log,
-            Movable { speed: 50.0 },
             Collider { 
                 size: Vec2::new(16.0, 32.0),
                 //is_trigger: false, // Add this field

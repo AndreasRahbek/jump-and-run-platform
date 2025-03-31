@@ -173,3 +173,70 @@ pub fn fit_canvas(
         }
     }
 }
+
+pub fn update_background(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    grid_config: Res<GridConfig>,
+    mut tile_query: Query<(Entity, &Transform), With<TileGrid>>,
+) {
+    let tile_size = grid_config.tile_size;
+    let grid_size_x = grid_config.grid_width;
+    let grid_size_y = grid_config.grid_height;
+
+    let total_height = grid_size_y as f32 * tile_size;
+    let offset_x = -(grid_size_x as f32) * tile_size / 2.0 + tile_size / 2.0;
+
+    // Find den laveste y-position af baggrundsfliserne
+    let mut lowest_y = f32::MAX;
+    for (_, transform) in tile_query.iter() {
+        if transform.translation.y < lowest_y {
+            lowest_y = transform.translation.y;
+        }
+    }
+
+    // Hvis den nederste række er ved at forlade skærmen, spawn en ny række øverst
+    let spawn_threshold = -total_height / 2.0;
+    if lowest_y < spawn_threshold {
+        let highest_y = lowest_y + total_height;
+
+        for x in 0..grid_size_x {
+            for y in 0..grid_size_y {
+                commands.spawn((
+                    Sprite {
+                        image: asset_server.load("tileset/background.png"),
+                        custom_size: Some(Vec2::new(tile_size, tile_size)),
+                        anchor: Anchor::TopCenter,
+                        ..default()
+                    },
+                    Transform::from_xyz(
+                        offset_x + (x as f32 * tile_size),
+                        highest_y - (y as f32 * tile_size),
+                        GRID_Z,
+                    ),
+                    TileGrid {
+                        x: x as u32,
+                        y: y as u32,
+                        occupied: false,
+                    },
+                    GridObject,
+                    GAME_LAYERS,
+                ));
+            }
+        }
+    }
+}
+
+pub fn remove_old_background(
+    mut commands: Commands,
+    tile_query: Query<(Entity, &Transform), With<TileGrid>>,
+    grid_config: Res<GridConfig>,
+) {
+    let despawn_threshold = -(grid_config.grid_height as f32) * grid_config.tile_size;
+
+    for (entity, transform) in tile_query.iter() {
+        if transform.translation.y < despawn_threshold {
+            commands.entity(entity).despawn();
+        }
+    }
+}

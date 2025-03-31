@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use crate::movement::Movable;
 use crate::world_grid::{GridObject, ENVIRONMENT_Z, GridConfig};
 
 #[derive(Component)]
@@ -60,7 +59,6 @@ pub fn setup_environment(
                     side: Side::Left,
                 },
                 Environment,
-                Movable { speed: ENVIRONMENT_SPEED },
                 GridObject,
             ));
         }
@@ -85,7 +83,6 @@ pub fn setup_environment(
                     side: Side::Right,
                 },
                 Environment,
-                Movable { speed: ENVIRONMENT_SPEED },
                 GridObject,
             ));
         }
