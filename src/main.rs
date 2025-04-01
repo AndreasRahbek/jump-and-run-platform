@@ -22,7 +22,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest())) // prevents blurry sprites
         .insert_resource(JumpSignal::default())
         .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-        .insert_resource(JumpTimer(Timer::from_seconds(0.5, TimerMode::Once)))
+        .insert_resource(JumpTimer(Timer::from_seconds(0.2, TimerMode::Once)))
         .add_systems(Startup, (
             setup_world_grid,
             setup_serial_listener,

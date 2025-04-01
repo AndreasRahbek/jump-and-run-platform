@@ -168,7 +168,7 @@ pub fn fit_canvas(
             let h_scale = event.width / RES_WIDTH as f32;
             let v_scale = event.height / RES_HEIGHT as f32;
 
-            let zoom_factor = 2.5;
+            let zoom_factor = 3.5;
             projection.scale = 1. / (h_scale.min(v_scale).floor().max(1.0) * zoom_factor);
         }
     }
