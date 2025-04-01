@@ -28,6 +28,7 @@ fn main() {
             setup_character,
         ).chain())
         .add_systems(Update, (
+            execute_animations,
             update_road,
             remove_old_road,
             update_background,

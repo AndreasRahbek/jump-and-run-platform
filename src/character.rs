@@ -3,6 +3,7 @@ use bevy::math::{UVec2, Vec3};
 use bevy::prelude::*;
 use crate::collision::Collider;
 use crate::world_grid::{PLAYER_Z};
+use std::time::Duration;
 
 #[derive(Component)]
 pub struct AnimationIndices {
@@ -22,9 +23,31 @@ pub struct Player {
     pub is_jumping: bool,
 }
 
-const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(5., 1.);
+const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(8., 1.);
 const ANIMATION_SPEED: f32 = 0.1;
 
+#[derive(Component)]
+pub struct AnimationConfig {
+    pub first_sprite_index: usize,
+    pub last_sprite_index: usize,
+    pub fps: u8,
+    pub frame_timer: Timer,
+}
+
+impl AnimationConfig {
+    pub fn new(first: usize, last: usize, fps: u8) -> Self {
+        Self {
+            first_sprite_index: first,
+            last_sprite_index: last,
+            fps,
+            frame_timer: Self::timer_from_fps(fps),
+        }
+    }
+
+    pub fn timer_from_fps(fps: u8) -> Timer {
+        Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating)
+    }
+}
 
 pub fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut Sprite)>,
 ) {
@@ -48,30 +71,26 @@ pub fn setup_character(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture = asset_server.load("textures/character/human.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 1, 1, None, None);
+    let texture = asset_server.load("textures/character/run.png");
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 6, 1, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
-    let animation_indices = AnimationIndices {first: 0, last: 5};
-    // Update the Collider initialization to include is_trigger
+    let animation_config = AnimationConfig::new(0, 5, 10);
+
     commands.spawn((
         Player::default(),
-        Sprite::from_atlas_image(
-            texture,
-            TextureAtlas {
+        Sprite {
+            image: texture,
+            texture_atlas: Some(TextureAtlas {
                 layout: texture_atlas_layout,
-                index: animation_indices.first,
-            },
-        ),
-        Transform {
-            translation: Vec3::new(0., 0., PLAYER_Z),
-            ..Default::default() // Beholder rotation som identity
+                index: animation_config.first_sprite_index,
+            }),
+            ..default()
         },
-        animation_indices,
-        AnimationTimer(Timer::from_seconds(ANIMATION_SPEED, TimerMode::Repeating)),
-        Collider{
+        Transform::from_xyz(0., 0., PLAYER_Z),
+        animation_config,
+        Collider {
             size: PLAYER_HITBOX_SIZE,
-            //is_trigger: false, // Add this field
         }
     ));
 }
@@ -126,6 +145,22 @@ pub fn jump(
         }
     }
 
+}
+
+pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfig, &mut Sprite)>) {
+    for (mut config, mut sprite) in &mut query {
+        config.frame_timer.tick(time.delta());
+
+        if config.frame_timer.just_finished() {
+            if let Some(atlas) = &mut sprite.texture_atlas {
+                if atlas.index == config.last_sprite_index {
+                    atlas.index = config.first_sprite_index;
+                } else {
+                    atlas.index += 1;
+                }
+            }
+        }
+    }
 }
 
 
