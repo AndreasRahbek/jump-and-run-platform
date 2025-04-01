@@ -62,7 +62,8 @@ pub fn update_road(
     let max_height = (grid_config.grid_height as f32) * tile_size / 2.0;
 
     if lowest_y < spawn_threshold {
-        let mut y = highest_y + tile_size;
+        let spacing_fix = 1.2; // samme som i setup_road
+        let mut y = highest_y + (tile_size - spacing_fix);
         while y < max_height {
             commands.spawn((
                 Sprite {
@@ -75,8 +76,9 @@ pub fn update_road(
                 MovingRoad,
                 GridObject,
             ));
-            y += tile_size;
+            y += tile_size - spacing_fix;
         }
+
     }
 }
 
