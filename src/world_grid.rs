@@ -60,7 +60,7 @@ pub fn setup_world_grid(mut commands: Commands) {
         tile_size: TILE_SIZE,
         grid_width: GRID_SIZE_X,
         grid_height: GRID_SIZE_Y,
-        scroll_speed: 20.0,
+        scroll_speed: 35.0,
         distance_moved: 0.0,
         spawn_threshold: TILE_SIZE * 10.0,
     });

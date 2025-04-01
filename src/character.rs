@@ -2,6 +2,7 @@ use bevy::asset::{AssetServer, Assets};
 use bevy::math::{UVec2, Vec3};
 use bevy::prelude::*;
 use crate::collision::Collider;
+use crate::microbit::JumpSignal;
 use crate::world_grid::{PLAYER_Z};
 use std::time::Duration;
 
@@ -28,26 +29,59 @@ const ANIMATION_SPEED: f32 = 0.1;
 
 #[derive(Component)]
 pub struct AnimationConfig {
-    pub first_sprite_index: usize,
-    pub last_sprite_index: usize,
+    pub run_texture: Handle<Image>,
+    pub run_layout: Handle<TextureAtlasLayout>,
+    pub run_indices: (usize, usize),
+
+    pub jump_texture: Handle<Image>,
+    pub jump_layout: Handle<TextureAtlasLayout>,
+    pub jump_indices: (usize, usize),
+
     pub fps: u8,
     pub frame_timer: Timer,
+    pub state: AnimationState,
 }
+
+
+
+
+
+#[derive(Component, PartialEq, Eq)]
+pub enum AnimationState {
+    Run,
+    Jump,
+}
+
 
 impl AnimationConfig {
-    pub fn new(first: usize, last: usize, fps: u8) -> Self {
+    pub fn new(
+        run_texture: Handle<Image>,
+        run_layout: Handle<TextureAtlasLayout>,
+        run_indices: (usize, usize),
+        jump_texture: Handle<Image>,
+        jump_layout: Handle<TextureAtlasLayout>,
+        jump_indices: (usize, usize),
+        fps: u8,
+    ) -> Self {
         Self {
-            first_sprite_index: first,
-            last_sprite_index: last,
+            run_texture,
+            run_layout,
+            run_indices,
+            jump_texture,
+            jump_layout,
+            jump_indices,
             fps,
-            frame_timer: Self::timer_from_fps(fps),
+            frame_timer: timer_from_fps(fps),
+            state: AnimationState::Run,
         }
     }
-
-    pub fn timer_from_fps(fps: u8) -> Timer {
-        Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating)
-    }
 }
+
+
+pub fn timer_from_fps(fps: u8) -> Timer {
+    Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating)
+}
+
 
 pub fn animate_sprite(time: Res<Time>, mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut Sprite)>,
 ) {
@@ -71,19 +105,30 @@ pub fn setup_character(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture = asset_server.load("textures/character/run.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 6, 1, None, None);
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    let run_texture = asset_server.load("textures/character/run.png");
+    let jump_texture = asset_server.load("textures/character/jump.png");
 
-    let animation_config = AnimationConfig::new(0, 5, 10);
+    let run_layout = texture_atlas_layouts.add(TextureAtlasLayout::from_grid(UVec2::splat(32), 6, 1, None, None));
+    let jump_layout = texture_atlas_layouts.add(TextureAtlasLayout::from_grid(UVec2::splat(32), 3, 1, None, None));
+
+    let animation_config = AnimationConfig::new(
+        run_texture.clone(),
+        run_layout.clone(),
+        (0, 5),
+        jump_texture.clone(),
+        jump_layout.clone(),
+        (0, 2),
+        10,
+    );
+
 
     commands.spawn((
         Player::default(),
         Sprite {
-            image: texture,
+            image: run_texture,
             texture_atlas: Some(TextureAtlas {
-                layout: texture_atlas_layout,
-                index: animation_config.first_sprite_index,
+                layout: run_layout,
+                index: 0,
             }),
             ..default()
         },
@@ -94,6 +139,7 @@ pub fn setup_character(
         }
     ));
 }
+
 
 const PLAYER_SPEED: f32 = 50.0;
 
@@ -127,34 +173,64 @@ pub fn move_character_horizontal(
 pub fn jump(
     time: Res<Time>,
     mut jump_timer: ResMut<JumpTimer>,
-    mut player: Query<(&mut Collider, &mut Player), With<Player>>,
+    mut player_query: Query<(&mut Player, &mut AnimationConfig, &mut Sprite), With<Player>>,
     kb_input: Res<ButtonInput<KeyCode>>,
+    signal: Res<JumpSignal>,
 ) {
-    for (mut collider, mut player) in &mut player.iter_mut() {
-        if kb_input.pressed(KeyCode::Space) && !player.is_jumping {
+    let mut microbit_triggered = false;
+
+    if let Ok(mut lock) = signal.0.lock() {
+        if *lock {
+            microbit_triggered = true;
+            *lock = false;
+        }
+    }
+
+    for (mut player, mut animation, mut sprite) in &mut player_query {
+        if (kb_input.pressed(KeyCode::Space) || microbit_triggered) && !player.is_jumping {
             player.is_jumping = true;
-            println!("Jumping");
+            animation.state = AnimationState::Jump;
+
+            // Skift til jump sprite-sheet
+            sprite.image = animation.jump_texture.clone();
+            sprite.texture_atlas = Some(TextureAtlas {
+                layout: animation.jump_layout.clone(),
+                index: animation.jump_indices.0,
+            });
+
             jump_timer.0.reset();
         }
 
         jump_timer.0.tick(time.delta());
 
         if jump_timer.0.just_finished() {
-            println!("Done Jumping");
             player.is_jumping = false;
+            animation.state = AnimationState::Run;
+
+            // Skift tilbage til run sprite-sheet
+            sprite.image = animation.run_texture.clone();
+            sprite.texture_atlas = Some(TextureAtlas {
+                layout: animation.run_layout.clone(),
+                index: animation.run_indices.0,
+            });
         }
     }
-
 }
+
 
 pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfig, &mut Sprite)>) {
     for (mut config, mut sprite) in &mut query {
         config.frame_timer.tick(time.delta());
 
         if config.frame_timer.just_finished() {
+            let (first, last) = match config.state {
+                AnimationState::Run => config.run_indices,
+                AnimationState::Jump => config.jump_indices,
+            };
+
             if let Some(atlas) = &mut sprite.texture_atlas {
-                if atlas.index == config.last_sprite_index {
-                    atlas.index = config.first_sprite_index;
+                if atlas.index >= last {
+                    atlas.index = first;
                 } else {
                     atlas.index += 1;
                 }
@@ -162,6 +238,8 @@ pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfi
         }
     }
 }
+
+
 
 
 

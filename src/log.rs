@@ -31,7 +31,7 @@ pub fn spawn_log(
             Transform::from_xyz(x_position, 250.0, LOG_Z),
             Log,
             Collider { 
-                size: Vec2::new(16.0, 32.0),
+                size: Vec2::new(16.0, 5.0),
                 //is_trigger: false, // Add this field
             },
             GridObject,
