@@ -5,6 +5,7 @@ use crate::collision::Collider;
 use crate::microbit::JumpSignal;
 use crate::world_grid::{PLAYER_Z};
 use std::time::Duration;
+use crate::scoreboard::show_death_scoreboard;
 
 #[derive(Component)]
 pub struct AnimationIndices {
@@ -22,6 +23,8 @@ pub struct JumpTimer(pub Timer);
 #[derive(Component, Default)]
 pub struct Player {
     pub is_jumping: bool,
+    pub is_dead: bool,
+    pub final_score: i32,
 }
 
 const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(8., 1.);
@@ -136,7 +139,7 @@ pub fn setup_character(
         animation_config,
         Collider {
             size: PLAYER_HITBOX_SIZE,
-        }
+        },
     ));
 }
 
@@ -144,31 +147,33 @@ pub fn setup_character(
 const PLAYER_SPEED: f32 = 50.0;
 
 pub fn move_character_horizontal(
-    mut player: Single<&mut Transform, With<Player>>,
+    mut query: Query<(&mut Transform, &Player)>,
     time: Res<Time>,
     kb_input: Res<ButtonInput<KeyCode>>,
 ) {
-    let mut direction = Vec2::ZERO;
+    for (mut transform, player) in query.iter_mut() {
+        if player.is_dead {
+            return;
+        }
 
-    // Check if inputs are detected
-    if kb_input.pressed(KeyCode::KeyA) {
-        direction.x -= 1.;
+        let mut direction = Vec2::ZERO;
+
+        if kb_input.pressed(KeyCode::KeyA) {
+            direction.x -= 1.;
+        }
+
+        if kb_input.pressed(KeyCode::KeyD) {
+            direction.x += 1.;
+        }
+
+        let move_delta = direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs();
+
+        transform.translation.x += move_delta.x;
+        let screen_bound = 220.0;
+        transform.translation.x = transform.translation.x.clamp(-screen_bound, screen_bound);
     }
-
-    if kb_input.pressed(KeyCode::KeyD) {
-        direction.x += 1.;
-    }
-
-    // Progressively update the player's position over time
-    let move_delta = direction.normalize_or_zero() * PLAYER_SPEED * time.delta_secs();
-
-    // Apply movement
-    player.translation.x += move_delta.x;
-
-    // Limit player movement to screen bounds
-    let screen_bound = 220.0;
-    player.translation.x = player.translation.x.clamp(-screen_bound, screen_bound);
 }
+
 
 pub fn jump(
     time: Res<Time>,
@@ -235,6 +240,21 @@ pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfi
                     atlas.index += 1;
                 }
             }
+        }
+    }
+}
+
+pub fn handle_player_death(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut query: Query<(Entity, &mut Player)>,
+    mut scoreboard_shown: Local<bool>
+){
+    for(entity, player) in query.iter_mut() {
+        if(player.is_dead && !*scoreboard_shown){
+            *scoreboard_shown = true;
+            show_death_scoreboard(&mut commands);
+            commands.entity(entity).despawn_recursive();
         }
     }
 }

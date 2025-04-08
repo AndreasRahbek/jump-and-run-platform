@@ -8,11 +8,11 @@ pub struct Collider {
 }
 
 pub fn check_collision(
-    player_query: Query<(&Collider, Entity, &Transform,  &Player), With<Player>>,
+    mut player_query: Query<(&Collider, Entity, &Transform, &mut Player), With<Player>>,
     collider_query: Query<(&Collider, &Transform), (With<Collider>, Without<Player>)>,
     mut commands: Commands,
 ) {
-    for(player_collider, player_entity, player_transform, player) in player_query.iter(){
+    for(player_collider, player_entity, player_transform, mut player) in player_query.iter_mut(){
         if player.is_jumping {
             return;
         }
@@ -29,7 +29,7 @@ pub fn check_collision(
                 && player_pos.y - player_size.y / 2.0 < collider_pos.y + collider_size.y / 2.0
                 && player_pos.y + player_size.y / 2.0 > collider_pos.y - collider_size.y / 2.0
             {
-                commands.entity(player_entity).despawn();
+                player.is_dead = true;
             }
         }
     }

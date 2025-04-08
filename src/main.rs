@@ -39,6 +39,7 @@ fn main() {
         ).chain())
         .add_systems(Update, (
             execute_animations,
+            handle_player_death,
             increase_score_system,
             scoreboard_system,
             update_road,
