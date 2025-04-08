@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 use crate::character::Player;
+use crate::world_grid::GridConfig;
 
 #[derive(Resource, Default)]
 pub struct ScoreText{
     pub text: String,
-    pub score: i32,
+    pub score: f32,
 }
 
 #[derive(Component)]
@@ -19,11 +20,13 @@ pub fn increase_score_system(
     time: Res<Time>,
     mut score_timer: ResMut<ScoreTimer>,
     mut score_text: ResMut<ScoreText>,
+    mut grid_config: ResMut<GridConfig>
+
 ) {
     score_timer.0.tick(time.delta());
 
     if score_timer.0.just_finished() {
-        score_text.score += 1;
+        score_text.score  += (2.0f32.powf(grid_config.scroll_speed / 30f32)).round();
     }
 }
 
@@ -85,8 +88,6 @@ pub fn show_death_scoreboard(
         },
         DeathScoreDisplay
     ));
-
-
 }
 
 

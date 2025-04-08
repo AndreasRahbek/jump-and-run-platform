@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::scoreboard::{ScoreText, ScoreTimer};
 
 // Z-index constants for layering
 pub const GRID_Z: f32 = 0.0;
@@ -53,6 +54,9 @@ pub struct DebugGridMarker;
 // Add a component specifically for grid lines
 #[derive(Component)]
 pub struct GridLineMarker;
+
+#[derive(Resource)]
+pub struct ScrollSpeedTimer(pub Timer);
 
 pub fn setup_world_grid(mut commands: Commands) {
     // Initialize grid configuration
@@ -202,6 +206,19 @@ pub fn update_debug_grid(
         for entity in grid_line_query.iter() {
             commands.entity(entity).despawn();
         }
+    }
+}
+
+pub fn increase_scroll_speed(
+    time: Res<Time>,
+    mut score_timer: ResMut<ScrollSpeedTimer>,
+    mut grid_config: ResMut<GridConfig>
+) {
+    score_timer.0.tick(time.delta());
+
+    if score_timer.0.just_finished() {
+        grid_config.scroll_speed += 10.;
+        println!("Scroll speed: {}", grid_config.scroll_speed);
     }
 }
 

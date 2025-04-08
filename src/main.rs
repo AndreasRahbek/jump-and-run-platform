@@ -25,6 +25,7 @@ fn main() {
         .insert_resource(JumpSignal::default())
         .insert_resource(<ScoreText>::default())
         .insert_resource(ScoreTimer(Timer::from_seconds(1.0 / 3.0, TimerMode::Repeating)))
+        .insert_resource(ScrollSpeedTimer(Timer::from_seconds(10., TimerMode::Repeating)))
         .insert_resource(SpawnTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
         .insert_resource(JumpTimer(Timer::from_seconds(0.2, TimerMode::Once)))
         .add_systems(Startup, (
@@ -43,6 +44,7 @@ fn main() {
             increase_score_system,
             scoreboard_system,
             update_road,
+            increase_scroll_speed,
             remove_old_road,
             update_background,
             move_character_horizontal,

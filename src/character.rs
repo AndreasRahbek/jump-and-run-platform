@@ -3,7 +3,7 @@ use bevy::math::{UVec2, Vec3};
 use bevy::prelude::*;
 use crate::collision::Collider;
 use crate::microbit::JumpSignal;
-use crate::world_grid::{PLAYER_Z};
+use crate::world_grid::{GridConfig, PLAYER_Z};
 use std::time::Duration;
 use crate::scoreboard::show_death_scoreboard;
 
@@ -24,7 +24,7 @@ pub struct JumpTimer(pub Timer);
 pub struct Player {
     pub is_jumping: bool,
     pub is_dead: bool,
-    pub final_score: i32,
+    pub final_score: f32,
 }
 
 const PLAYER_HITBOX_SIZE: Vec2 = Vec2::new(8., 1.);
@@ -248,12 +248,14 @@ pub fn handle_player_death(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut query: Query<(Entity, &mut Player)>,
-    mut scoreboard_shown: Local<bool>
+    mut scoreboard_shown: Local<bool>,
+    mut grid_config: ResMut<GridConfig>
 ){
     for(entity, player) in query.iter_mut() {
-        if(player.is_dead && !*scoreboard_shown){
+        if player.is_dead && !*scoreboard_shown {
             *scoreboard_shown = true;
             show_death_scoreboard(&mut commands);
+            grid_config.scroll_speed = 0.;
             commands.entity(entity).despawn_recursive();
         }
     }
