@@ -50,28 +50,23 @@ pub fn setup_scoreboard(mut commands: Commands) {
 
 pub fn scoreboard_system(
     mut score: ResMut<ScoreText>,
-    mut display: Query<(Entity, &mut Text), With<ScoreDisplay>>,
+    mut display: Single<(&mut Text), With<ScoreDisplay>>,
     mut query: Query<(Entity, &mut Player)>,
-    mut commands: Commands,
 ) {
-    for(_player_entity, mut player) in query.iter_mut() {
+    for(_player_entity, player) in query.iter_mut() {
         if player.is_dead{
-            for (score_entity, _text) in display.iter(){
-                player.final_score = score.score;
-                for(_entity, mut score_text) in display.iter_mut() {
-                    score_text.0 = format!("Noob dead. Final score:: {}", player.final_score);
-                }
-                return;
-            }
-        }
-        for(_entity, mut score_text) in display.iter_mut() {
-            score_text.0 = format!("Score: {}", score.score);
+            return;
+        } else {
+            display.0 = format!("Score: {}", score.score);
         }
     }
 }
 
 pub fn show_death_scoreboard(
-    mut commands: &mut Commands
+    mut commands: &mut Commands,
+    mut query: &mut Query<(Entity, &mut Player)>,
+    mut score_text: Single<Entity>,
+    mut score: ResMut<ScoreText>
 ){
     commands.spawn((
         Text::new("Noob dead. Final score:"),
@@ -88,6 +83,11 @@ pub fn show_death_scoreboard(
         },
         DeathScoreDisplay
     ));
+
+    for(_player_entity, mut player) in query.iter_mut() {
+        player.final_score = score.score;
+    }
+    commands.entity(*score_text).despawn();
 }
 
 
