@@ -10,6 +10,10 @@
     },
     {
       "name": "Alex",
+      "score": 64.0
+    },
+    {
+      "name": "Alex",
       "score": 26.0
     },
     {
@@ -34,10 +38,6 @@
     },
     {
       "name": "Anonymous",
-      "score": 0.0
-    },
-    {
-      "name": "r",
       "score": 0.0
     }
   ]
