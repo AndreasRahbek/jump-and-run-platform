@@ -5,7 +5,7 @@ use crate::collision::Collider;
 use crate::microbit::JumpSignal;
 use crate::world_grid::{GridConfig, PLAYER_Z};
 use std::time::Duration;
-use crate::scoreboard::show_death_scoreboard;
+use crate::scoreboard::{ScoreText, ScoreDisplay, ScoreboardState, HighScores, FinalScore, GameState};
 
 #[derive(Component)]
 pub struct AnimationIndices {
@@ -246,22 +246,34 @@ pub fn execute_animations(time: Res<Time>, mut query: Query<(&mut AnimationConfi
 
 pub fn handle_player_death(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut query: Query<(Entity, &mut Player)>,
-    mut scoreboard_shown: Local<bool>,
-    mut grid_config: ResMut<GridConfig>
-){
-    for(entity, player) in query.iter_mut() {
-        if player.is_dead && !*scoreboard_shown {
-            *scoreboard_shown = true;
-            show_death_scoreboard(&mut commands);
+    mut grid_config: ResMut<GridConfig>,
+    score: Res<ScoreText>,
+    score_display_query: Query<Entity, With<ScoreDisplay>>,
+    mut scoreboard_state: ResMut<ScoreboardState>,
+    mut final_score: ResMut<FinalScore>,
+    high_scores: Res<HighScores>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    for (entity, mut player) in query.iter_mut() {
+        if player.is_dead {
+            
+            player.final_score = score.score;
+            final_score.0 = score.score;
+            
+            if let Ok(score_entity) = score_display_query.get_single() {
+                 commands.entity(score_entity).despawn();
+            }
+
+            if high_scores.is_high_score(score.score) {
+                *scoreboard_state = ScoreboardState::EnterName;
+            } else {
+                *scoreboard_state = ScoreboardState::ShowScores;
+            }
+
             grid_config.scroll_speed = 0.;
             commands.entity(entity).despawn_recursive();
+            next_game_state.set(GameState::GameOver);
         }
     }
 }
-
-
-
-
-
