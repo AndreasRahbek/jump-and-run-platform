@@ -2,7 +2,6 @@ use std::io::{BufRead, BufReader};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-use serialport::SerialPort;
 use std::time::Duration;
 
 use bevy::prelude::*;

@@ -25,9 +25,6 @@ pub struct TileGrid {
     pub occupied: bool,
 }
 
-#[derive(Component)]
-pub struct Log;
-
 #[derive(Resource)]
 pub struct GridMovementTracker {
     pub distance_moved: f32,

@@ -35,13 +35,6 @@ By default, the game looks for the Micro:bit on **COM8**. If your Micro:bit is o
 Open a terminal in the project folder and run:
 
 ```bash
-cargo run --target x86_64-pc-windows-msvc
-```
-
-*(Note: We use `--target x86_64-pc-windows-msvc` to ensure the game runs on your PC, as the `Cargo.toml` file contains settings for embedded cross-compilation which would otherwise attempt to deploy to the Micro:bit itself).*
-
-If you have removed the `[build]` section from `Cargo.toml`, you can simply run:
-```bash
 cargo run
 ```
 
